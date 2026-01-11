@@ -1,0 +1,45 @@
+name: Deploy Chalice App to AWS
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Chalice
+        run: pip install chalice
+
+      - name: Install dependencies
+        run: |
+          cd consumer
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run tests with coverage
+        run: |
+          cd consumer
+          pip install pytest-cov
+          pytest --cov=. --cov-fail-under=80 --cov-report=term-missing
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy with Chalice
+        run: |
+          cd consumer
+          chalice deploy
