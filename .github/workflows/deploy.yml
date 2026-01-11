@@ -43,3 +43,10 @@ jobs:
         run: |
           cd consumer
           chalice deploy
+
+      - name: Mask API URL
+        run: |
+          cd consumer
+          API_URL=$(chalice url)
+          echo "::add-mask::$API_URL"
+          echo "API deployed at: $API_URL"
